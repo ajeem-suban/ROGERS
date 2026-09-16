@@ -1,3 +1,54 @@
+ <p align="center">
+  <img src="src/rogers-banner.png" alt="ROGERS — AI Student Project Orchestrator" width="100%">
+</p>
+
+<h1 align="center">ROGERS — AI Student Project Orchestrator</h1>
+
+<p align="center">
+  <strong>IDEA → RESEARCH → BUILD → TEST → SHIP</strong>
+</p>
+
+<p align="center">
+  An intelligent AI-powered platform that transforms a student's project idea into a complete, tested, and organized software project.
+</p>
+
+---
+
+## 🚀 About ROGERS
+
+ROGERS is an AI Student Project Orchestrator designed to help college students turn a one-line project idea into a practical, working software project.
+
+It researches and refines ideas, recommends suitable AI tools, coordinates multiple AI models, generates backend and frontend code, automatically tests and debugs the project, and saves the completed result to the student's selected project folder.
+
+## ✨ Key Features
+
+- 💡 **Idea to Project** — Transform a one-line idea into a complete project.
+- 🔎 **AI Research** — Research, analyze, and refine project concepts.
+- 🤖 **Smart AI Recommendations** — Compare suitable free and paid AI tools.
+- 🧠 **Multi-Model Collaboration** — Coordinate multiple AI models when suitable.
+- 🔐 **Human Approval** — Keep students in control of model selection, permissions, and important actions.
+- ⚙️ **Complete Project Generation** — Build backend, frontend, APIs, and supporting files.
+- 🧪 **Automatic Testing** — Verify that the generated project works.
+- 🛠️ **Debugging and Repair** — Detect errors and attempt fixes.
+- 📁 **Project File Management** — Organize and save completed project files.
+- 🌐 **Hybrid AI Architecture** — Support local/offline and online AI providers.
+- 💻 **CLI and Web Interface** — Offer flexible development workflows.
+
+## 🔄 Project Workflow
+
+```text
+IDEA → RESEARCH → PLAN → SELECT MODELS
+     → BUILD → TEST → DEBUG → SAVE
+     → PROJECT READY
+```
+
+## 🎯 Mission
+
+Help students move beyond a simple idea and develop real, usable software through AI-powered research, engineering, testing, and automation.
+
+<p align="center">
+  <strong>“I Can Do This All Day”</strong>
+</p>
 
 # 🛡️ ROGERS
 
@@ -53,37 +104,37 @@ ROGERS is actively under development.
 
 ### Completed
 
-* [x] Project creation from an idea
-* [x] Structured project blueprint generation
-* [x] Research & analysis stage
-* [x] Requirements engineering stage
-* [x] System architecture stage
-* [x] Technology stack stage
-* [x] Development roadmap stage
-* [x] Human approval workflow
-* [x] Modify stage decisions
-* [x] Regenerate stages with guidance
-* [x] Downstream context propagation
-* [x] Persistent project storage
-* [x] Multi-project management
-* [x] Project scaffolding
-* [x] JSON and Markdown blueprint export
-* [x] Provider abstraction
-* [x] Automated test suite
-* [x] FastAPI backend
-* [x] React + TypeScript frontend
+- [x] Project creation from an idea
+- [x] Structured project blueprint generation
+- [x] Research & analysis stage
+- [x] Requirements engineering stage
+- [x] System architecture stage
+- [x] Technology stack stage
+- [x] Development roadmap stage
+- [x] Human approval workflow
+- [x] Modify stage decisions
+- [x] Regenerate stages with guidance
+- [x] Downstream context propagation
+- [x] Persistent project storage
+- [x] Multi-project management
+- [x] Project scaffolding
+- [x] JSON and Markdown blueprint export
+- [x] Provider abstraction
+- [x] Automated test suite
+- [x] FastAPI backend
+- [x] React + TypeScript frontend
 
 ### 🚧 In Development
 
-* [ ] Blueprint → real feature implementation
-* [ ] Safe code generation and modification
-* [ ] Automated validation
-* [ ] Testing and automatic fixing
-* [ ] GitHub integration
-* [ ] Plugin system
-* [ ] Intelligent model/provider routing
-* [ ] Multi-agent execution
-* [ ] Deployment automation
+- [ ] Blueprint → real feature implementation
+- [ ] Safe code generation and modification
+- [ ] Automated validation
+- [ ] Testing and automatic fixing
+- [ ] GitHub integration
+- [ ] Plugin system
+- [ ] Intelligent model/provider routing
+- [ ] Multi-agent execution
+- [ ] Deployment automation
 
 ---
 
@@ -95,10 +146,10 @@ The long-term mission structure is:
 
 | Mission     | Role                    | Example Providers        |
 | ----------- | ----------------------- | ------------------------ |
-| 🕵️ Recon   | Research & intelligence | Perplexity, Groq, Ollama |
+| 🕵️ Recon    | Research & intelligence | Perplexity, Groq, Ollama |
 | 🔥 Backend  | Backend engineering     | Claude, OpenAI, Ollama   |
-| ⚡ Frontend  | Frontend engineering    | OpenAI, Ollama           |
-| 🛡️ Testing | Testing & verification  | DeepSeek, Ollama         |
+| ⚡ Frontend | Frontend engineering    | OpenAI, Ollama           |
+| 🛡️ Testing  | Testing & verification  | DeepSeek, Ollama         |
 
 The provider layer is intentionally flexible.
 
@@ -136,31 +187,31 @@ Current technology stack:
 
 ### Backend
 
-* Python 3.10+
-* FastAPI
-* Pydantic
-* Uvicorn
-* JSON-based persistent project storage
+- Python 3.10+
+- FastAPI
+- Pydantic
+- Uvicorn
+- JSON-based persistent project storage
 
 ### Frontend
 
-* React
-* TypeScript
-* Vite
-* Tailwind CSS
-* Lucide Icons
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Lucide Icons
 
 ### AI Providers
 
-* Built-in offline provider
-* Groq
-* OpenAI
-* Ollama
-* OpenAI-compatible endpoints
+- Built-in offline provider
+- Groq
+- OpenAI
+- Ollama
+- OpenAI-compatible endpoints
 
 ### Testing
 
-* Pytest
+- Pytest
 
 ---
 
@@ -265,11 +316,11 @@ ROGERS follows a **Bring Your Own Key (BYOK)** approach.
 
 API keys should:
 
-* Stay on the user's machine
-* Be stored locally in `.env`
-* Never be committed to Git
-* Never be displayed in logs
-* Never be stored by a ROGERS server
+- Stay on the user's machine
+- Be stored locally in `.env`
+- Never be committed to Git
+- Never be displayed in logs
+- Never be stored by a ROGERS server
 
 Example:
 
@@ -297,16 +348,16 @@ pytest tests/ -v
 
 The current test suite covers:
 
-* Health checks
-* Provider detection
-* Input validation
-* Complete blueprint generation
-* Domain adaptation
-* SPA serving
-* Multi-stage orchestration
-* Human modification
-* Downstream context propagation
-* Project scaffolding
+- Health checks
+- Provider detection
+- Input validation
+- Complete blueprint generation
+- Domain adaptation
+- SPA serving
+- Multi-stage orchestration
+- Human modification
+- Downstream context propagation
+- Project scaffolding
 
 ---
 
@@ -316,13 +367,13 @@ ROGERS should feel less like a generic enterprise dashboard and more like a **mi
 
 The interface direction is inspired by:
 
-* 🛡️ Shield geometry
-* ⭐ Star motifs
-* 🔵 Deep blue command-center surfaces
-* 🔴 Red mission indicators
-* ⚪ White/silver information elements
-* 🎬 Cinematic orchestration
-* 🤖 AI agents working as a team
+- 🛡️ Shield geometry
+- ⭐ Star motifs
+- 🔵 Deep blue command-center surfaces
+- 🔴 Red mission indicators
+- ⚪ White/silver information elements
+- 🎬 Cinematic orchestration
+- 🤖 AI agents working as a team
 
 Future UI work will include a **shield-inspired loading and progress animation** for AI orchestration.
 
@@ -336,43 +387,43 @@ The goal is:
 
 ## Phase 1 — Foundation
 
-* [x] Project creation
-* [x] Blueprint generation
-* [x] Multi-stage orchestration
-* [x] Human review
-* [x] Persistent project memory
-* [x] Project scaffolding
+- [x] Project creation
+- [x] Blueprint generation
+- [x] Multi-stage orchestration
+- [x] Human review
+- [x] Persistent project memory
+- [x] Project scaffolding
 
 ## Phase 2 — Implementation
 
-* [ ] Select development task
-* [ ] Generate implementation
-* [ ] Modify project files safely
-* [ ] Validate generated code
-* [ ] Display implementation results
+- [ ] Select development task
+- [ ] Generate implementation
+- [ ] Modify project files safely
+- [ ] Validate generated code
+- [ ] Display implementation results
 
 ## Phase 3 — Verification
 
-* [ ] Automated tests
-* [ ] Failure detection
-* [ ] AI-assisted fixing
-* [ ] Regression validation
+- [ ] Automated tests
+- [ ] Failure detection
+- [ ] AI-assisted fixing
+- [ ] Regression validation
 
 ## Phase 4 — Developer Integrations
 
-* [ ] GitHub integration
-* [ ] Git commits
-* [ ] Pull requests
-* [ ] Plugin system
-* [ ] External tools
+- [ ] GitHub integration
+- [ ] Git commits
+- [ ] Pull requests
+- [ ] Plugin system
+- [ ] External tools
 
 ## Phase 5 — Advanced Orchestration
 
-* [ ] Intelligent model routing
-* [ ] Parallel agents
-* [ ] Advanced project memory
-* [ ] Deployment automation
-* [ ] Full project lifecycle orchestration
+- [ ] Intelligent model routing
+- [ ] Parallel agents
+- [ ] Advanced project memory
+- [ ] Deployment automation
+- [ ] Full project lifecycle orchestration
 
 ---
 
@@ -380,13 +431,13 @@ The goal is:
 
 College students often have project ideas but struggle with:
 
-* Where to start
-* Choosing the right technology
-* Designing the architecture
-* Building the backend
-* Connecting the frontend
-* Writing tests
-* Organizing the project
+- Where to start
+- Choosing the right technology
+- Designing the architecture
+- Building the backend
+- Connecting the frontend
+- Writing tests
+- Organizing the project
 
 ROGERS aims to turn that uncertainty into a structured mission.
 
@@ -428,7 +479,6 @@ to:
 
 **"I built it."**
 
-🛡️ **ROGERS — Assemble.**
-=======
-# ROGERS
+# 🛡️ **ROGERS — Assemble.**
 
+# ROGERS
