@@ -1,7 +1,7 @@
 # System Architecture: Tamil AI Document Intelligence
 
 ## Overview
-The system follows a decoupled, event-driven architecture. The React single-page frontend communicates with the FastAPI gateway via REST and Server-Sent Events. Ingested documents are stored in object storage, while an asynchronous OCR worker pool extracts text and coordinates. Extracted text chunks are vectorized and indexed in pgvector. When a query is submitted, the RAG engine performs hybrid dense-sparse semantic retrieval and streams context-grounded responses back to the user.
+The system follows a decoupled, event-driven architecture. The React single-page frontend communicates with the FastAPI gateway via REST and Server-Sent Events. Ingested documents are stored in object storage, while an asynchronous OCR worker pool extracts text and coordinates. Extracted text chunks are vectorized and indexed in SQLite vector extension. When a query is submitted, the RAG engine performs hybrid dense-sparse semantic retrieval and streams context-grounded responses back to the user.
 
 ## Component Boundaries
 ### Web Presentation Layer (React + Vite client)
@@ -22,7 +22,7 @@ The system follows a decoupled, event-driven architecture. The React single-page
 - Core responsibilities and interactions.
 
 ## Technology Stack Rationale
-- **Frontend**: React 18 + TypeScript + Vite + Tailwind CSS + Lucide Icons
-- **Backend**: FastAPI (Python 3.11+) + Uvicorn + Pydantic v2 + Celery worker queue
-- **Database**: PostgreSQL 16 + pgvector (or Qdrant) + Redis for task caching
-- **AI/ML**: Tesseract OCR (Tamil traineddata) / EasyOCR + IndicBERT / BGE-M3 embeddings + Llama 3 / Mistral via Ollama or Groq
+- **Frontend**: React + TypeScript + Vite + Tailwind
+- **Backend**: FastAPI + Python 3.12
+- **Database**: SQLite 3 with vector extensions (Local Edge)
+- **AI/ML**: Llama 3 / Mistral

@@ -241,6 +241,12 @@ export const App: React.FC = () => {
             onApproveStage={handleApproveStage}
             onModifyStage={handleModifyStage}
             isLoadingStage={isLoadingStage}
+            onRefreshProject={async () => {
+              if (currentProject) {
+                const fresh = await getProject(currentProject.id);
+                setCurrentProject(fresh);
+              }
+            }}
           />
         )}
 

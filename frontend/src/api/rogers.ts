@@ -3,7 +3,8 @@ import {
   ProjectCreatePayload, 
   BlueprintResponse, 
   StageData,
-  ScaffoldResponse 
+  ScaffoldResponse,
+  TaskImplementationResult
 } from '../types';
 
 const BASE_URL = '/api';
@@ -129,6 +130,26 @@ export async function runAllStages(projectId: string): Promise<Project> {
 /** Generates physical project scaffolding files on disk. */
 export async function scaffoldProject(projectId: string): Promise<ScaffoldResponse> {
   return request<ScaffoldResponse>(`/projects/${projectId}/scaffold`, {
+    method: 'POST',
+  });
+}
+
+/** Executes code implementation for a specific development task. */
+export async function implementTask(
+  projectId: string,
+  taskId: string
+): Promise<TaskImplementationResult> {
+  return request<TaskImplementationResult>(`/projects/${projectId}/tasks/${taskId}/implement`, {
+    method: 'POST',
+  });
+}
+
+/** Restores previous file versions from a task snapshot. */
+export async function restoreTask(
+  projectId: string,
+  taskId: string
+): Promise<{ message: string; status: string }> {
+  return request<{ message: string; status: string }>(`/projects/${projectId}/tasks/${taskId}/restore`, {
     method: 'POST',
   });
 }

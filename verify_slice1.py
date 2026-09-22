@@ -3,8 +3,21 @@ import json
 
 BASE_URL = "http://127.0.0.1:8000"
 
+def get_client():
+    try:
+        r = httpx.get(f"{BASE_URL}/api/health", timeout=1.0)
+        if r.status_code == 200:
+            print("[INFO] Testing against running live server at http://127.0.0.1:8000")
+            return httpx.Client(base_url=BASE_URL, timeout=30.0)
+    except Exception:
+        pass
+    print("[INFO] Live server not detected; using FastAPI TestClient in-memory runner.")
+    from fastapi.testclient import TestClient
+    from backend.app.main import app
+    return TestClient(app)
+
 def run_verification():
-    client = httpx.Client(base_url=BASE_URL, timeout=10.0)
+    client = get_client()
 
     print("\n--- 1. Testing Frontend SPA Serving ---")
     res = client.get("/")

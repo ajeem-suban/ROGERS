@@ -13,11 +13,14 @@ import {
   Download,
   Share2,
   FileCode,
-  Sliders
+  Sliders,
+  Code2,
+  Play
 } from 'lucide-react';
-import { Project, Blueprint } from '../types';
+import { Project, Blueprint, DevelopmentTask } from '../types';
 import { ScaffoldPanel } from './ScaffoldPanel';
 import { StageInspector } from './StageInspector';
+import { TaskImplementationModal } from './TaskImplementationModal';
 
 interface BlueprintViewProps {
   project: Project;
@@ -26,6 +29,7 @@ interface BlueprintViewProps {
   onApproveStage: (stageName: string) => Promise<void>;
   onModifyStage: (stageName: string, modifications: Record<string, any>) => Promise<void>;
   isLoadingStage: boolean;
+  onRefreshProject?: () => void;
 }
 
 export const BlueprintView: React.FC<BlueprintViewProps> = ({ 
@@ -35,11 +39,19 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
   onApproveStage,
   onModifyStage,
   isLoadingStage,
+  onRefreshProject,
 }) => {
   const [activeTab, setActiveTab] = useState<'blueprint' | 'scaffold' | 'stages'>('blueprint');
   const [selectedStageName, setSelectedStageName] = useState<string>('research');
   const [copied, setCopied] = useState(false);
+  const [selectedTaskForImpl, setSelectedTaskForImpl] = useState<DevelopmentTask | null>(null);
+  const [isImplModalOpen, setIsImplModalOpen] = useState(false);
   const blueprint: Blueprint | undefined = project.blueprint ?? undefined;
+
+  const handleOpenTaskImpl = (task: DevelopmentTask) => {
+    setSelectedTaskForImpl(task);
+    setIsImplModalOpen(true);
+  };
 
   const handleCopyMarkdown = () => {
     if (!blueprint) return;
@@ -232,6 +244,15 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
                         ? 'bg-amber-950/60 text-amber-300 border-amber-800/60'
                         : 'bg-slate-800 text-slate-300 border-slate-700';
 
+                    const statusBadge = 
+                      task.status === 'completed'
+                        ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800/60'
+                        : task.status === 'implementing'
+                        ? 'bg-indigo-950/60 text-indigo-300 border-indigo-800/60 animate-pulse'
+                        : task.status === 'failed'
+                        ? 'bg-rose-950/60 text-rose-300 border-rose-800/60'
+                        : 'bg-slate-800/80 text-slate-400 border-slate-700/60';
+
                     return (
                       <div 
                         key={idx} 
@@ -246,13 +267,37 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
                               {task.title}
                             </h3>
                           </div>
-                          <span className={`text-[11px] font-mono font-medium px-2 py-0.5 rounded-md border uppercase shrink-0 ${priorityBadge}`}>
-                            {task.priority}
-                          </span>
+                          <div className="flex items-center space-x-2 shrink-0">
+                            <span className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-md border uppercase ${priorityBadge}`}>
+                              {task.priority}
+                            </span>
+                            <span className={`text-[10px] font-mono font-medium px-2 py-0.5 rounded-md border uppercase ${statusBadge}`}>
+                              {task.status || 'pending'}
+                            </span>
+                          </div>
                         </div>
-                        <p className="text-xs text-slate-400 pl-6 leading-relaxed">
+                        <p className="text-xs text-slate-400 pl-6 leading-relaxed mb-3">
                           {task.description}
                         </p>
+                        <div className="pl-6 flex items-center justify-end">
+                          {task.status === 'completed' ? (
+                            <button
+                              onClick={() => handleOpenTaskImpl(task)}
+                              className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 text-xs font-mono border border-emerald-800/60 transition-colors shadow-sm"
+                            >
+                              <Code2 className="w-3.5 h-3.5" />
+                              <span>View Changes</span>
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleOpenTaskImpl(task)}
+                              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors shadow-sm"
+                            >
+                              <Play className="w-3 h-3 fill-current" />
+                              <span>Implement</span>
+                            </button>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -357,6 +402,20 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
           </div>
         </>
       )}
+
+      {/* Task Implementation Modal */}
+      <TaskImplementationModal
+        isOpen={isImplModalOpen}
+        onClose={() => setIsImplModalOpen(false)}
+        projectId={project.id}
+        projectName={project.name}
+        task={selectedTaskForImpl}
+        onTaskUpdated={() => {
+          if (onRefreshProject) {
+            onRefreshProject();
+          }
+        }}
+      />
     </div>
   );
 };

@@ -8,6 +8,7 @@
 - [ ] Conversational RAG interface providing grounded answers with source page and paragraph citations
 - [ ] Role-based access control (RBAC) ensuring document privacy across user workspaces
 - [ ] Audit logs and export functionality for extracted text and generated question-answer summaries
+- [ ] Custom user requirement: High security requirement: zero data retention on third-party servers
 
 ## Non-Functional Requirements
 - Security: Role-based access control, input sanitization, JWT authorization.

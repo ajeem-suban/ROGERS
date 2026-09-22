@@ -1,7 +1,7 @@
 # Engineering Blueprint: Tamil AI Document Intelligence
 
 ## Summary
-Tamil AI Document Intelligence is an intelligent Tamil-language document processing and retrieval platform. It ingests scanned documents and PDFs, extracts high-accuracy Tamil and English text using specialized OCR, indexes textual chunks into a semantic vector store, and enables users to perform natural language question answering grounded directly in document context via Retrieval-Augmented Generation (RAG). Note: add more tech stack
+Tamil AI Document Intelligence is an intelligent Tamil-language document processing and retrieval platform. It ingests scanned documents and PDFs, extracts high-accuracy Tamil and English text using specialized OCR, indexes textual chunks into a semantic vector store, and enables users to perform natural language question answering grounded directly in document context via Retrieval-Augmented Generation (RAG).
 
 ## Development Roadmap
 ### Phase 1: Initialize Project Repository and Environment (HIGH)
