@@ -4,7 +4,9 @@ import {
   BlueprintResponse, 
   StageData,
   ScaffoldResponse,
-  TaskImplementationResult
+  TaskImplementationResult,
+  DeliveryPackageMetadata,
+  MissionReport
 } from '../types';
 
 const BASE_URL = '/api';
@@ -153,3 +155,21 @@ export async function restoreTask(
     method: 'POST',
   });
 }
+
+/** Packages the scaffolded and verified project into a clean delivery archive. */
+export async function createDeliveryPackage(projectId: string): Promise<DeliveryPackageMetadata> {
+  return request<DeliveryPackageMetadata>(`/projects/${projectId}/package`, {
+    method: 'POST',
+  });
+}
+
+/** Retrieves the comprehensive final mission report for a project. */
+export async function getMissionReport(projectId: string): Promise<MissionReport> {
+  return request<MissionReport>(`/projects/${projectId}/mission-report`);
+}
+
+/** Returns the direct download URL for the project delivery package. */
+export function getDownloadPackageUrl(projectId: string): string {
+  return `${BASE_URL}/projects/${projectId}/package/download`;
+}
+

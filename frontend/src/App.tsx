@@ -260,7 +260,7 @@ export const App: React.FC = () => {
       </main>
 
       <footer className="border-t border-slate-900 py-6 text-center text-xs text-slate-500 font-mono">
-        ROGERS AI Project Orchestrator • Slice 2 (Multi-Stage & Scaffolding) • Free & Open-Source
+        ROGERS AI Project Orchestrator • Slice 5 (Mission Control & End-to-End Delivery) • Free & Open-Source
       </footer>
     </div>
   );

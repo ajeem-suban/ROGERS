@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 from ..models import Blueprint
-from ..implementation.models import ImplementationProposal
+from ..implementation.models import ImplementationProposal, FailureAnalysis
 
 
 class AIProvider(ABC):
@@ -29,5 +29,34 @@ class AIProvider(ABC):
     ) -> ImplementationProposal:
         """
         Generates structured file operations (create, modify) to implement a specific development task.
+        """
+        pass
+
+    @abstractmethod
+    async def analyze_failure(
+        self,
+        task_title: str,
+        task_description: str,
+        test_output: str,
+        relevant_files: Dict[str, str],
+        current_implementation: Optional[ImplementationProposal] = None
+    ) -> FailureAnalysis:
+        """
+        Diagnoses test or compilation failures and provides structured root-cause analysis.
+        """
+        pass
+
+    @abstractmethod
+    async def generate_repair(
+        self,
+        task_title: str,
+        task_description: str,
+        failure_analysis: FailureAnalysis,
+        test_output: str,
+        relevant_files: Dict[str, str],
+        attempt: int
+    ) -> ImplementationProposal:
+        """
+        Generates targeted file modifications to fix the diagnosed failure.
         """
         pass

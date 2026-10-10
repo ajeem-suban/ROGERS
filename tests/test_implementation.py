@@ -117,7 +117,7 @@ async def test_end_to_end_task_implementation():
         # 6. Verify task status updated in project storage
         proj_after = (await ac.get(f"/api/projects/{project_id}")).json()
         task_after = next(t for t in proj_after["blueprint"]["development_tasks"] if t["id"] == task_id)
-        assert task_after["status"] == "completed"
+        assert task_after["status"] in ["completed", "verified"]
         assert task_after["implementation_result"] is not None
 
         # 7. Test task restore endpoint

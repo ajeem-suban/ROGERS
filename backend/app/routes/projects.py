@@ -1,6 +1,8 @@
 import uuid
 from typing import List, Optional
+from pathlib import Path
 from fastapi import APIRouter, HTTPException, status
+from fastapi.responses import FileResponse
 
 from ..models import (
     Project, 
@@ -16,6 +18,12 @@ from ..implementation.service import (
     PathSecurityError, 
     TaskImplementationError, 
     restore_snapshot
+)
+from ..delivery.models import DeliveryPackageMetadata, MissionReport
+from ..delivery.service import (
+    create_delivery_package, 
+    generate_mission_report, 
+    PackagingError
 )
 from ..storage import ProjectStorage
 from ..orchestrator import BlueprintOrchestrator, OrchestratorError
@@ -217,3 +225,56 @@ async def restore_task(project_id: str, task_id: str):
     target_task.implementation_result = None
     ProjectStorage.save(project)
     return {"message": "Files successfully restored from snapshot backup.", "status": "restored"}
+
+
+@router.post("/{project_id}/package", response_model=DeliveryPackageMetadata)
+async def package_project(project_id: str):
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+
+    try:
+        metadata = create_delivery_package(project)
+        project.package_metadata = metadata
+        ProjectStorage.save(project)
+        return metadata
+    except PackagingError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to create delivery package: {str(e)}")
+
+
+@router.get("/{project_id}/package/download")
+async def download_package(project_id: str):
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+
+    if not project.package_metadata or not project.package_metadata.package_path:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="No delivery package exists for this project. Please generate a package first."
+        )
+
+    pkg_path = Path(project.package_metadata.package_path)
+    if not pkg_path.exists() or not pkg_path.is_file():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="The delivery package archive file was not found on the server. Please regenerate."
+        )
+
+    return FileResponse(
+        path=str(pkg_path),
+        filename=project.package_metadata.package_filename,
+        media_type="application/zip"
+    )
+
+
+@router.get("/{project_id}/mission-report", response_model=MissionReport)
+async def get_mission_report(project_id: str):
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+
+    return generate_mission_report(project, project.package_metadata)
+

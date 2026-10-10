@@ -19,3 +19,7 @@ data/*.tmp
 # IDE
 .vscode/
 .idea/
+
+# Packages & Delivery
+dist_packages/
+*.zip

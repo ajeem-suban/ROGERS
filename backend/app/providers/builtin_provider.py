@@ -1,8 +1,8 @@
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from .base import AIProvider
 from ..models import Blueprint, TechStack, Architecture, DevelopmentTask
-from ..implementation.models import ImplementationProposal, FileOperation
+from ..implementation.models import ImplementationProposal, FileOperation, FailureAnalysis
 
 
 class BuiltinProvider(AIProvider):
@@ -360,6 +360,26 @@ async def health_check():
                     before_content=existing_main
                 ))
 
+            # Add test file for health
+            health_test_content = '''from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+def test_health_check_endpoint():
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert "uptime_seconds" in data
+'''
+            changes.append(FileOperation(
+                path="backend/tests/test_health.py",
+                operation="create",
+                content=health_test_content,
+                before_content=None
+            ))
+
             tests.append("GET /api/health returns HTTP 200 with status 'healthy' and uptime_seconds")
 
         # 2. Document Upload & Storage Task
@@ -430,6 +450,27 @@ async def upload_document(file: UploadFile = File(...)):
                     before_content=existing_main
                 ))
 
+            # Add test file for documents upload
+            docs_test_content = '''from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+def test_document_upload_success():
+    files = {"file": ("test_sample.pdf", b"%PDF-1.4 test document content", "application/pdf")}
+    response = client.post("/api/documents/upload", files=files)
+    assert response.status_code == 201
+    data = response.json()
+    assert data["status"] == "uploaded"
+    assert data["filename"] == "test_sample.pdf"
+'''
+            changes.append(FileOperation(
+                path="backend/tests/test_documents.py",
+                operation="create",
+                content=docs_test_content,
+                before_content=None
+            ))
+
             tests.append("POST /api/documents/upload accepts valid PDF/images and returns 201 Created")
 
         # 3. OCR Extraction Task
@@ -459,11 +500,28 @@ class TamilOCRService:
                 content=ocr_service_content,
                 before_content=None
             ))
+
+            # Add test file for OCR service
+            ocr_test_content = '''from app.services.ocr import TamilOCRService
+
+def test_tamil_ocr_extraction():
+    result = TamilOCRService.extract_text("sample.png")
+    assert "text" in result
+    assert result["confidence"] > 0.9
+'''
+            changes.append(FileOperation(
+                path="backend/tests/test_ocr.py",
+                operation="create",
+                content=ocr_test_content,
+                before_content=None
+            ))
+
             tests.append("TamilOCRService extracts text with confidence score")
 
         # 4. Generic Task Fallback
         else:
             module_name = re.sub(r"[^\w]", "_", task_title.lower()).strip("_") or "service"
+            class_name = f"{module_name.title().replace('_', '')}Service"
             summary = f"Implemented {task_title} with dedicated service interface."
 
             service_content = f'''"""Implementation for: {task_title}
@@ -471,7 +529,7 @@ Description: {task_description}
 """
 from typing import Dict, Any
 
-class {module_name.title().replace("_", "")}Service:
+class {class_name}:
     def __init__(self):
         self.name = "{task_title}"
 
@@ -488,10 +546,148 @@ class {module_name.title().replace("_", "")}Service:
                 content=service_content,
                 before_content=None
             ))
+
+            # Add test file for generic service
+            service_test_content = f'''from app.services.{module_name} import {class_name}
+
+def test_{module_name}_execution():
+    service = {class_name}()
+    result = service.execute()
+    assert result["status"] == "success"
+    assert result["task"] == "{task_title}"
+'''
+            changes.append(FileOperation(
+                path=f"backend/tests/test_{module_name}.py",
+                operation="create",
+                content=service_test_content,
+                before_content=None
+            ))
+
             tests.append(f"{task_title} service initializes and executes successfully")
 
         return ImplementationProposal(
             summary=summary,
             changes=changes,
             tests=tests
+        )
+
+    async def analyze_failure(
+        self,
+        task_title: str,
+        task_description: str,
+        test_output: str,
+        relevant_files: Dict[str, str],
+        current_implementation: Optional[ImplementationProposal] = None
+    ) -> FailureAnalysis:
+        test_lower = test_output.lower()
+        affected_files: List[str] = []
+        for file_path in relevant_files.keys():
+            base = file_path.split("/")[-1].lower()
+            if base in test_lower or base.replace(".py", "") in test_lower:
+                affected_files.append(file_path)
+
+        if not affected_files:
+            affected_files = list(relevant_files.keys())[:2]
+
+        if "importerror" in test_lower or "modulenotfounderror" in test_lower:
+            root_cause = "Missing module import or incorrect relative path in route/service registration"
+            explanation = "A Python module failed to import during test initialization. Typically caused by missing or mislocated router imports in main.py."
+            proposed_fix = "Update import paths and ensure proper package references in main.py and service modules."
+            confidence = 0.95
+        elif "status_code" in test_lower or "404" in test_lower:
+            root_cause = "Route endpoint not found (HTTP 404)"
+            explanation = "FastAPI application router was not mounted or endpoint URL prefix did not match expected route path."
+            proposed_fix = "Verify route prefix in APIRouter and ensure app.include_router() is properly invoked in main.py."
+            confidence = 0.90
+        elif "500" in test_lower or "internal server error" in test_lower:
+            root_cause = "Unhandled exception inside route handler (HTTP 500)"
+            explanation = "An exception occurred during request processing, possibly due to uninitialized dependency or file system access."
+            proposed_fix = "Add defensive exception handling, ensure directories exist, and validate parameters."
+            confidence = 0.88
+        elif "assert" in test_lower:
+            root_cause = "Assertion mismatch between expected test output and endpoint/service response"
+            explanation = "The endpoint or service returned a status code, schema, or value that deviated from test expectations."
+            proposed_fix = "Adjust response payload or status code handling to align with API contract."
+            confidence = 0.92
+        else:
+            root_cause = "Functional verification error during automated test execution"
+            explanation = f"Pytest encountered failures while testing {task_title}. Failure output:\n" + test_output[-300:]
+            proposed_fix = "Refactor endpoint logic and service implementation to satisfy test assertions."
+            confidence = 0.85
+
+        return FailureAnalysis(
+            root_cause=root_cause,
+            affected_files=affected_files,
+            explanation=explanation,
+            proposed_fix=proposed_fix,
+            confidence=confidence
+        )
+
+    async def generate_repair(
+        self,
+        task_title: str,
+        task_description: str,
+        failure_analysis: FailureAnalysis,
+        test_output: str,
+        relevant_files: Dict[str, str],
+        attempt: int
+    ) -> ImplementationProposal:
+        repair_changes: List[FileOperation] = []
+        test_lower = test_output.lower()
+
+        # Check if main.py needs route fixes
+        if "backend/app/main.py" in relevant_files and ("404" in test_lower or "importerror" in test_lower):
+            current_main = relevant_files["backend/app/main.py"]
+            fixed_main = current_main
+            if "health" in task_title.lower() and "health_router" not in fixed_main:
+                fixed_main = "from .routes.health import router as health_router\n" + fixed_main
+                fixed_main += "\napp.include_router(health_router)\n"
+            if "document" in task_title.lower() and "documents_router" not in fixed_main:
+                fixed_main = "from .routes.documents import router as documents_router\n" + fixed_main
+                fixed_main += "\napp.include_router(documents_router)\n"
+
+            repair_changes.append(FileOperation(
+                path="backend/app/main.py",
+                operation="modify",
+                content=fixed_main,
+                before_content=current_main
+            ))
+
+        # Check if a route file had an issue or assertion mismatch
+        for path, content in relevant_files.items():
+            if path.startswith("backend/app/routes/") or path.startswith("backend/app/services/"):
+                fixed_content = content
+                if "500" in test_lower and "upload" in path:
+                    fixed_content = fixed_content.replace(
+                        'UPLOAD_DIR = Path("uploads")',
+                        'UPLOAD_DIR = Path("uploads")\nUPLOAD_DIR.mkdir(parents=True, exist_ok=True)'
+                    )
+                if "assert" in test_lower and "health" in path and "uptime_seconds" not in fixed_content:
+                    fixed_content = fixed_content.replace(
+                        'return HealthDetail(',
+                        'return HealthDetail(uptime_seconds=0.1, '
+                    )
+
+                if fixed_content != content:
+                    repair_changes.append(FileOperation(
+                        path=path,
+                        operation="modify",
+                        content=fixed_content,
+                        before_content=content
+                    ))
+
+        # If no specific rule matched, produce clean targeted implementation
+        if not repair_changes:
+            fresh_proposal = await self.generate_task_implementation(
+                task_title=task_title,
+                task_description=task_description,
+                project_context={},
+                relevant_files=relevant_files
+            )
+            repair_changes = fresh_proposal.changes
+
+        return ImplementationProposal(
+            summary=f"Applied targeted repair (attempt {attempt}/3): {failure_analysis.proposed_fix}",
+            changes=repair_changes,
+            tests=[f"Re-verify {task_title} against automated pytest suite"]
         )

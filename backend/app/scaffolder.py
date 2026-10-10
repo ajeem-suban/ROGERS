@@ -229,6 +229,29 @@ CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 """
         write_file("backend/Dockerfile", dockerfile)
 
+        # 7b. backend/tests
+        write_file("backend/tests/__init__.py", "")
+        test_api_content = f'''from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+def test_api_health():
+    """Verify system health endpoint returns healthy status."""
+    response = client.get("/api/health")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "healthy"
+
+def test_api_info():
+    """Verify info endpoint returns project identity."""
+    response = client.get("/api/info")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["name"] == "{project.name}"
+'''
+        write_file("backend/tests/test_api.py", test_api_content)
+
         # 8. frontend/package.json
         fe_package = f'''{{
   "name": "{project_slug}-client",

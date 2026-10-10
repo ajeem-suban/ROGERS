@@ -101,7 +101,7 @@ def verify_slice3():
     fresh_proj = client.get(f"/api/projects/{project_id}").json()
     fresh_tasks = fresh_proj["blueprint"]["development_tasks"]
     updated_task = next(t for t in fresh_tasks if t["id"] == task_id)
-    assert updated_task["status"] == "completed"
+    assert updated_task["status"] in ["completed", "verified"]
     assert updated_task["implementation_result"] is not None
     print(f"[OK] Project model reflects task status '{updated_task['status']}'")
 

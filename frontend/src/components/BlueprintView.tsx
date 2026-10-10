@@ -15,12 +15,14 @@ import {
   FileCode,
   Sliders,
   Code2,
-  Play
+  Shield,
+  ShieldCheck
 } from 'lucide-react';
 import { Project, Blueprint, DevelopmentTask } from '../types';
 import { ScaffoldPanel } from './ScaffoldPanel';
 import { StageInspector } from './StageInspector';
 import { TaskImplementationModal } from './TaskImplementationModal';
+import { DeliveryPanel } from './DeliveryPanel';
 
 interface BlueprintViewProps {
   project: Project;
@@ -41,7 +43,7 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
   isLoadingStage,
   onRefreshProject,
 }) => {
-  const [activeTab, setActiveTab] = useState<'blueprint' | 'scaffold' | 'stages'>('blueprint');
+  const [activeTab, setActiveTab] = useState<'blueprint' | 'scaffold' | 'stages' | 'delivery'>('blueprint');
   const [selectedStageName, setSelectedStageName] = useState<string>('research');
   const [copied, setCopied] = useState(false);
   const [selectedTaskForImpl, setSelectedTaskForImpl] = useState<DevelopmentTask | null>(null);
@@ -118,7 +120,27 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
           <FileCode className="w-3.5 h-3.5" />
           <span>Code Scaffolding</span>
         </button>
+
+        <button
+          onClick={() => setActiveTab('delivery')}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all relative ${
+            activeTab === 'delivery'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+          }`}
+        >
+          <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+          <span>Mission Delivery</span>
+          {project.package_metadata && (
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          )}
+        </button>
       </div>
+
+      {/* Tab: Mission Delivery */}
+      {activeTab === 'delivery' && (
+        <DeliveryPanel project={project} onRefreshProject={onRefreshProject} />
+      )}
 
       {/* Tab: Code Scaffolding */}
       {activeTab === 'scaffold' && (
@@ -190,6 +212,15 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
                 </button>
 
                 <button
+                  onClick={() => setActiveTab('delivery')}
+                  className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-lg bg-blue-950/70 hover:bg-blue-900/80 text-blue-200 text-xs font-medium border border-blue-700/60 transition-colors shadow-sm"
+                  title="Mission Delivery & Package"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+                  <span>Delivery</span>
+                </button>
+
+                <button
                   onClick={onNewProject}
                   className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-colors shadow-sm"
                 >
@@ -245,10 +276,14 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
                         : 'bg-slate-800 text-slate-300 border-slate-700';
 
                     const statusBadge = 
-                      task.status === 'completed'
+                      task.status === 'verified'
+                        ? 'bg-blue-950/80 text-blue-200 border-blue-500/80 shadow-[0_0_10px_rgba(59,130,246,0.3)]'
+                        : task.status === 'completed'
                         ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800/60'
-                        : task.status === 'implementing'
+                        : task.status === 'implementing' || task.status === 'validating' || task.status === 'testing'
                         ? 'bg-indigo-950/60 text-indigo-300 border-indigo-800/60 animate-pulse'
+                        : task.status === 'repairing'
+                        ? 'bg-amber-950/80 text-amber-300 border-amber-600/80 animate-pulse'
                         : task.status === 'failed'
                         ? 'bg-rose-950/60 text-rose-300 border-rose-800/60'
                         : 'bg-slate-800/80 text-slate-400 border-slate-700/60';
@@ -280,10 +315,18 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
                           {task.description}
                         </p>
                         <div className="pl-6 flex items-center justify-end">
-                          {task.status === 'completed' ? (
+                          {task.status === 'verified' ? (
                             <button
                               onClick={() => handleOpenTaskImpl(task)}
-                              className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 text-xs font-mono border border-emerald-800/60 transition-colors shadow-sm"
+                              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-blue-950/70 hover:bg-blue-900/80 text-blue-200 text-xs font-mono border border-blue-700/60 transition-colors shadow-sm"
+                            >
+                              <ShieldCheck className="w-3.5 h-3.5 text-blue-400" />
+                              <span>Mission Verified</span>
+                            </button>
+                          ) : task.status === 'completed' ? (
+                            <button
+                              onClick={() => handleOpenTaskImpl(task)}
+                              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-emerald-950/60 hover:bg-emerald-900/60 text-emerald-300 text-xs font-mono border border-emerald-800/60 transition-colors shadow-sm"
                             >
                               <Code2 className="w-3.5 h-3.5" />
                               <span>View Changes</span>
@@ -291,10 +334,10 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
                           ) : (
                             <button
                               onClick={() => handleOpenTaskImpl(task)}
-                              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors shadow-sm"
+                              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium transition-colors shadow-sm"
                             >
-                              <Play className="w-3 h-3 fill-current" />
-                              <span>Implement</span>
+                              <Shield className="w-3.5 h-3.5" />
+                              <span>Execute Mission</span>
                             </button>
                           )}
                         </div>

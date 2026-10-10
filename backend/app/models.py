@@ -19,6 +19,7 @@ class Architecture(BaseModel):
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 from .implementation.models import TaskImplementationResult
+from .delivery.models import DeliveryPackageMetadata
 
 
 class DevelopmentTask(BaseModel):
@@ -26,7 +27,10 @@ class DevelopmentTask(BaseModel):
     title: str = Field(..., description="Actionable development task title")
     description: str = Field(..., description="Detailed description of the task requirements")
     priority: str = Field(default="medium", description="Priority level: high, medium, or low")
-    status: str = Field(default="pending", description="Task implementation status: pending, implementing, completed, failed")
+    status: str = Field(
+        default="pending", 
+        description="Task implementation status: pending, inspecting, implementing, validating, testing, repairing, completed, verified, failed"
+    )
     implementation_result: Optional[TaskImplementationResult] = Field(default=None, description="Result of code implementation")
 
     @model_validator(mode="after")
@@ -79,6 +83,7 @@ class Project(BaseModel):
     current_stage: Optional[str] = Field(default="research", description="Current active stage")
     stages: Dict[str, StageData] = Field(default_factory=dict, description="Detailed stage progression")
     blueprint: Optional[Blueprint] = Field(default=None, description="Synthesized technical blueprint (Slice 1 & 2)")
+    package_metadata: Optional[DeliveryPackageMetadata] = Field(default=None, description="Latest delivery package metadata")
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
