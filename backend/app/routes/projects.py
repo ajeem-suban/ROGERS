@@ -25,6 +25,19 @@ from ..delivery.service import (
     generate_mission_report, 
     PackagingError
 )
+from ..git.models import (
+    GitStatusResponse,
+    GitDiffResponse,
+    GitInitRequest,
+    GitCommitRequest,
+    GitCommitResponse,
+    GitRemoteAddRequest,
+    GitPushRequest,
+    GitPushResponse,
+    PublishingHistoryEntry,
+    RemoteConfig,
+)
+from ..git.service import GitService, GitSecurityError, GitExecutionError
 from ..storage import ProjectStorage
 from ..orchestrator import BlueprintOrchestrator, OrchestratorError
 from ..scaffolder import ProjectScaffolder, GENERATED_BASE_DIR, slugify
@@ -277,4 +290,90 @@ async def get_mission_report(project_id: str):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
 
     return generate_mission_report(project, project.package_metadata)
+
+
+# --- Slice 6: Git & GitHub Integration Endpoints ---
+
+@router.get("/{project_id}/git/status", response_model=GitStatusResponse)
+async def get_git_status(project_id: str):
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    return GitService.get_status(project)
+
+
+@router.post("/{project_id}/git/init", response_model=GitStatusResponse)
+async def init_git_repo(project_id: str, payload: Optional[GitInitRequest] = None):
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    default_branch = payload.default_branch if payload else "main"
+    try:
+        status_res = GitService.init_repo(project, default_branch=default_branch)
+        ProjectStorage.save(project)
+        return status_res
+    except (GitSecurityError, GitExecutionError) as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get("/{project_id}/git/diff", response_model=GitDiffResponse)
+async def get_git_diff(project_id: str):
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    try:
+        return GitService.get_diff(project)
+    except (GitSecurityError, GitExecutionError) as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{project_id}/git/commit", response_model=GitCommitResponse)
+async def commit_git_changes(project_id: str, payload: GitCommitRequest):
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    try:
+        commit_res = GitService.commit_approved_changes(project, payload.message, payload.approved_files)
+        ProjectStorage.save(project)
+        return commit_res
+    except (GitSecurityError, GitExecutionError) as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{project_id}/git/remote", response_model=RemoteConfig)
+async def add_git_remote(project_id: str, payload: GitRemoteAddRequest):
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    try:
+        rem_res = GitService.add_remote(project, payload.name, payload.url)
+        ProjectStorage.save(project)
+        return rem_res
+    except (GitSecurityError, GitExecutionError) as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{project_id}/git/push", response_model=GitPushResponse)
+async def push_git_commit(project_id: str, payload: Optional[GitPushRequest] = None):
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    remote_name = payload.remote_name if payload else "origin"
+    branch_name = payload.branch_name if payload else None
+    auto_pub = payload.auto_publish if payload else False
+    try:
+        push_res = GitService.push_to_remote(project, remote_name=remote_name, branch_name=branch_name, auto_publish=auto_pub)
+        ProjectStorage.save(project)
+        return push_res
+    except (GitSecurityError, GitExecutionError) as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get("/{project_id}/git/publishing-history", response_model=List[PublishingHistoryEntry])
+async def get_publishing_history(project_id: str):
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    return project.publishing_history
+
 

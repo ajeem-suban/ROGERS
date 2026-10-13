@@ -517,6 +517,17 @@ One orchestrated team.
 
 ---
 
+## 🛡️ Slice 6: Safe Git & GitHub Integration
+
+ROGERS includes a built-in Version Control & Autonomous Publishing suite:
+- **Repository Isolation**: Safely initializes Git in `generated_projects/<slug>/` while strictly isolating and defending the ROGERS core source code.
+- **Secret & Sensitive Data Guard**: Automated scanner immediately intercepts and blocks staging of `.env`, private keys (`.pem`, `.key`), cloud tokens, and credentials.
+- **Selective & Approved Staging**: Transparent diff inspection allows engineers to review changes and stage only verified, approved files.
+- **Verification Gates Prior to Remote Push**: Unverified or failing projects are strictly blocked from publishing to remote Git repositories until all test gates pass.
+- **Credential Redaction & Audit History**: Automatic token redaction in telemetry logs and full immutable publishing audit trails in Mission Control.
+
+---
+
 # 📜 License
 
 ROGERS is open source software released under the **MIT License**.

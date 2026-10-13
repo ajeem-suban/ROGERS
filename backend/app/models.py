@@ -20,6 +20,7 @@ class Architecture(BaseModel):
 from pydantic import BaseModel, Field, field_validator, model_validator
 from .implementation.models import TaskImplementationResult
 from .delivery.models import DeliveryPackageMetadata
+from .git.models import PublishingHistoryEntry
 
 
 class DevelopmentTask(BaseModel):
@@ -84,6 +85,7 @@ class Project(BaseModel):
     stages: Dict[str, StageData] = Field(default_factory=dict, description="Detailed stage progression")
     blueprint: Optional[Blueprint] = Field(default=None, description="Synthesized technical blueprint (Slice 1 & 2)")
     package_metadata: Optional[DeliveryPackageMetadata] = Field(default=None, description="Latest delivery package metadata")
+    publishing_history: List[PublishingHistoryEntry] = Field(default_factory=list, description="Audit log of Git publishing operations")
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 

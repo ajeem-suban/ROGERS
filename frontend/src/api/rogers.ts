@@ -6,7 +6,13 @@ import {
   ScaffoldResponse,
   TaskImplementationResult,
   DeliveryPackageMetadata,
-  MissionReport
+  MissionReport,
+  GitStatusResponse,
+  GitDiffResponse,
+  GitCommitResponse,
+  GitPushResponse,
+  RemoteConfig,
+  PublishingHistoryEntry
 } from '../types';
 
 const BASE_URL = '/api';
@@ -172,4 +178,65 @@ export async function getMissionReport(projectId: string): Promise<MissionReport
 export function getDownloadPackageUrl(projectId: string): string {
   return `${BASE_URL}/projects/${projectId}/package/download`;
 }
+
+/** Fetches current Git status for the generated project. */
+export async function getGitStatus(projectId: string): Promise<GitStatusResponse> {
+  return request<GitStatusResponse>(`/projects/${projectId}/git/status`);
+}
+
+/** Initializes a Git repository in the generated project. */
+export async function initGitRepo(projectId: string, defaultBranch: string = 'main'): Promise<GitStatusResponse> {
+  return request<GitStatusResponse>(`/projects/${projectId}/git/init`, {
+    method: 'POST',
+    body: JSON.stringify({ default_branch: defaultBranch }),
+  });
+}
+
+/** Retrieves bounded Git diff of changes. */
+export async function getGitDiff(projectId: string): Promise<GitDiffResponse> {
+  return request<GitDiffResponse>(`/projects/${projectId}/git/diff`);
+}
+
+/** Commits explicitly approved files with a message. */
+export async function commitGitChanges(
+  projectId: string,
+  message: string,
+  approvedFiles: string[]
+): Promise<GitCommitResponse> {
+  return request<GitCommitResponse>(`/projects/${projectId}/git/commit`, {
+    method: 'POST',
+    body: JSON.stringify({ message, approved_files: approvedFiles }),
+  });
+}
+
+/** Adds or updates a Git remote for the project. */
+export async function addGitRemote(projectId: string, name: string, url: string): Promise<RemoteConfig> {
+  return request<RemoteConfig>(`/projects/${projectId}/git/remote`, {
+    method: 'POST',
+    body: JSON.stringify({ name, url }),
+  });
+}
+
+/** Pushes verified commits to the configured remote. */
+export async function pushGitCommit(
+  projectId: string,
+  remoteName: string = 'origin',
+  branchName?: string,
+  autoPublish: boolean = false
+): Promise<GitPushResponse> {
+  return request<GitPushResponse>(`/projects/${projectId}/git/push`, {
+    method: 'POST',
+    body: JSON.stringify({
+      remote_name: remoteName,
+      branch_name: branchName,
+      auto_publish: autoPublish,
+    }),
+  });
+}
+
+/** Fetches the publishing audit history for the project. */
+export async function getPublishingHistory(projectId: string): Promise<PublishingHistoryEntry[]> {
+  return request<PublishingHistoryEntry[]>(`/projects/${projectId}/git/publishing-history`);
+}
+
 

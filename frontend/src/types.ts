@@ -114,6 +114,7 @@ export interface Project {
   stages?: Record<string, StageData>;
   blueprint?: Blueprint | null;
   package_metadata?: DeliveryPackageMetadata | null;
+  publishing_history?: PublishingHistoryEntry[];
   created_at: string;
   updated_at: string;
 }
@@ -183,3 +184,70 @@ export interface MissionReport {
   recommended_next_steps: string[];
   tagline: string;
 }
+
+export interface RemoteConfig {
+  name: string;
+  fetch_url: string;
+  push_url: string;
+}
+
+export interface GitFileChange {
+  path: string;
+  status: 'modified' | 'added' | 'deleted' | 'untracked' | 'renamed' | 'conflicted' | string;
+  is_staged: boolean;
+  has_secret_risk: boolean;
+  risk_reason?: string | null;
+}
+
+export interface GitStatusResponse {
+  git_installed: boolean;
+  initialized: boolean;
+  branch?: string | null;
+  head_commit?: string | null;
+  is_clean: boolean;
+  is_detached: boolean;
+  changes: GitFileChange[];
+  remotes: RemoteConfig[];
+  ahead_count: number;
+  behind_count: number;
+  diverged: boolean;
+  error?: string | null;
+}
+
+export interface GitDiffResponse {
+  diff: string;
+  truncated: boolean;
+  file_count: number;
+}
+
+export interface GitCommitResponse {
+  success: boolean;
+  commit_hash?: string | null;
+  branch?: string | null;
+  files_committed: string[];
+  message: string;
+}
+
+export interface GitPushResponse {
+  success: boolean;
+  remote_name: string;
+  branch_name: string;
+  commit_hash?: string | null;
+  message: string;
+  error_detail?: string | null;
+}
+
+export interface PublishingHistoryEntry {
+  id: string;
+  project_id: string;
+  commit_hash?: string | null;
+  commit_message: string;
+  branch: string;
+  remote_name?: string | null;
+  files_committed: string[];
+  verification_status: string;
+  push_status: 'committed_local' | 'pushed' | 'push_failed' | string;
+  timestamp: string;
+  error_detail?: string | null;
+}
+

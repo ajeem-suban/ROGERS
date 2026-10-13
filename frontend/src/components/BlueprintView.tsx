@@ -16,13 +16,15 @@ import {
   Sliders,
   Code2,
   Shield,
-  ShieldCheck
+  ShieldCheck,
+  FolderGit2
 } from 'lucide-react';
 import { Project, Blueprint, DevelopmentTask } from '../types';
 import { ScaffoldPanel } from './ScaffoldPanel';
 import { StageInspector } from './StageInspector';
 import { TaskImplementationModal } from './TaskImplementationModal';
 import { DeliveryPanel } from './DeliveryPanel';
+import { GitPanel } from './GitPanel';
 
 interface BlueprintViewProps {
   project: Project;
@@ -43,7 +45,7 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
   isLoadingStage,
   onRefreshProject,
 }) => {
-  const [activeTab, setActiveTab] = useState<'blueprint' | 'scaffold' | 'stages' | 'delivery'>('blueprint');
+  const [activeTab, setActiveTab] = useState<'blueprint' | 'scaffold' | 'stages' | 'delivery' | 'git'>('blueprint');
   const [selectedStageName, setSelectedStageName] = useState<string>('research');
   const [copied, setCopied] = useState(false);
   const [selectedTaskForImpl, setSelectedTaskForImpl] = useState<DevelopmentTask | null>(null);
@@ -135,7 +137,24 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
           )}
         </button>
+
+        <button
+          onClick={() => setActiveTab('git')}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all relative ${
+            activeTab === 'git'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+          }`}
+        >
+          <FolderGit2 className="w-3.5 h-3.5 text-blue-400" />
+          <span>GitHub & Publishing</span>
+        </button>
       </div>
+
+      {/* Tab: GitHub & Publishing */}
+      {activeTab === 'git' && (
+        <GitPanel project={project} onRefreshProject={onRefreshProject} />
+      )}
 
       {/* Tab: Mission Delivery */}
       {activeTab === 'delivery' && (
