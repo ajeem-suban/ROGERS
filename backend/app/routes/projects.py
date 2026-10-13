@@ -38,6 +38,13 @@ from ..git.models import (
     RemoteConfig,
 )
 from ..git.service import GitService, GitSecurityError, GitExecutionError
+from ..mission.models import (
+    ExecutionPlan,
+    MissionState,
+    MissionExecutionReport,
+    MissionActionRequest
+)
+from ..mission.service import MissionOrchestrator, MissionOrchestratorError
 from ..storage import ProjectStorage
 from ..orchestrator import BlueprintOrchestrator, OrchestratorError
 from ..scaffolder import ProjectScaffolder, GENERATED_BASE_DIR, slugify
@@ -375,5 +382,71 @@ async def get_publishing_history(project_id: str):
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
     return project.publishing_history
+
+
+# --- Slice 7: Autonomous Multi-Task Mission Endpoints ---
+
+@router.get("/{project_id}/mission/plan", response_model=ExecutionPlan)
+async def get_mission_plan(project_id: str):
+    """Previews and validates the dependency graph and proposed execution plan."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    return MissionOrchestrator.get_execution_plan(project)
+
+
+@router.get("/{project_id}/mission/status", response_model=MissionState)
+async def get_mission_status(project_id: str):
+    """Retrieves live or persisted mission execution state and progress."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    return MissionOrchestrator.get_mission_state(project)
+
+
+@router.post("/{project_id}/mission/start", response_model=MissionState)
+async def start_mission(project_id: str):
+    """Starts autonomous multi-task execution following approved plan."""
+    try:
+        return await MissionOrchestrator.start_mission(project_id)
+    except MissionOrchestratorError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{project_id}/mission/pause", response_model=MissionState)
+async def pause_mission(project_id: str):
+    """Pauses active mission execution safely at task boundary."""
+    try:
+        return await MissionOrchestrator.pause_mission(project_id)
+    except MissionOrchestratorError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{project_id}/mission/resume", response_model=MissionState)
+async def resume_mission(project_id: str):
+    """Resumes paused or blocked mission from its last completed checkpoint."""
+    try:
+        return await MissionOrchestrator.resume_mission(project_id)
+    except MissionOrchestratorError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{project_id}/mission/cancel", response_model=MissionState)
+async def cancel_mission(project_id: str):
+    """Cancels active mission execution."""
+    try:
+        return await MissionOrchestrator.cancel_mission(project_id)
+    except MissionOrchestratorError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get("/{project_id}/mission/report", response_model=MissionExecutionReport)
+async def get_mission_report(project_id: str):
+    """Generates comprehensive mission execution report."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    return MissionOrchestrator.get_mission_report(project)
+
 
 

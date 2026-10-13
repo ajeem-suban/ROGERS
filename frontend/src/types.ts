@@ -82,6 +82,7 @@ export interface DevelopmentTask {
   title: string;
   description: string;
   priority: 'high' | 'medium' | 'low' | string;
+  depends_on?: string[];
   status?: 'pending' | 'inspecting' | 'implementing' | 'validating' | 'testing' | 'repairing' | 'completed' | 'verified' | 'failed' | string;
   implementation_result?: TaskImplementationResult | null;
 }
@@ -115,6 +116,7 @@ export interface Project {
   blueprint?: Blueprint | null;
   package_metadata?: DeliveryPackageMetadata | null;
   publishing_history?: PublishingHistoryEntry[];
+  mission_state?: MissionState | null;
   created_at: string;
   updated_at: string;
 }
@@ -250,4 +252,79 @@ export interface PublishingHistoryEntry {
   timestamp: string;
   error_detail?: string | null;
 }
+
+// --- Slice 7: Autonomous Multi-Task Mission Types ---
+
+export type MissionStatus = 'ready' | 'running' | 'paused' | 'blocked' | 'failed' | 'cancelled' | 'completed';
+export type TaskExecutionState = 'pending' | 'eligible' | 'running' | 'verified' | 'failed' | 'blocked' | 'skipped';
+
+export interface TaskPlanItem {
+  task_id: string;
+  title: string;
+  priority: string;
+  depends_on: string[];
+  state: TaskExecutionState;
+  order_index: number;
+  blocked_by: string[];
+}
+
+export interface ExecutionPlan {
+  project_id: string;
+  project_name: string;
+  is_valid: boolean;
+  total_tasks: number;
+  execution_order: string[];
+  tasks: TaskPlanItem[];
+  has_cycles: boolean;
+  missing_dependencies: Record<string, string[]>;
+  validation_errors: string[];
+}
+
+export interface TaskProgressItem {
+  task_id: string;
+  title: string;
+  status: string;
+  depends_on: string[];
+  verified: boolean;
+  snapshot_id?: string | null;
+  tests_passed: number;
+  tests_total: number;
+  repair_attempts_count: number;
+  error_message?: string | null;
+}
+
+export interface MissionState {
+  project_id: string;
+  status: MissionStatus;
+  current_task_id?: string | null;
+  current_task_title?: string | null;
+  execution_order: string[];
+  completed_task_ids: string[];
+  failed_task_ids: string[];
+  blocked_task_ids: string[];
+  skipped_task_ids: string[];
+  tasks_progress: Record<string, TaskProgressItem>;
+  active_worker_id?: string | null;
+  error_message?: string | null;
+  started_at?: string | null;
+  updated_at?: string | null;
+  completed_at?: string | null;
+}
+
+export interface MissionExecutionReport {
+  project_id: string;
+  project_name: string;
+  status: MissionStatus;
+  total_tasks: number;
+  completed_count: number;
+  failed_count: number;
+  blocked_count: number;
+  skipped_count: number;
+  duration_seconds: number;
+  tasks: TaskProgressItem[];
+  started_at?: string | null;
+  completed_at?: string | null;
+  summary: string;
+}
+
 

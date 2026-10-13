@@ -28,6 +28,7 @@ class DevelopmentTask(BaseModel):
     title: str = Field(..., description="Actionable development task title")
     description: str = Field(..., description="Detailed description of the task requirements")
     priority: str = Field(default="medium", description="Priority level: high, medium, or low")
+    depends_on: List[str] = Field(default_factory=list, description="IDs of prerequisite tasks that must pass before this task")
     status: str = Field(
         default="pending", 
         description="Task implementation status: pending, inspecting, implementing, validating, testing, repairing, completed, verified, failed"
@@ -86,6 +87,7 @@ class Project(BaseModel):
     blueprint: Optional[Blueprint] = Field(default=None, description="Synthesized technical blueprint (Slice 1 & 2)")
     package_metadata: Optional[DeliveryPackageMetadata] = Field(default=None, description="Latest delivery package metadata")
     publishing_history: List[PublishingHistoryEntry] = Field(default_factory=list, description="Audit log of Git publishing operations")
+    mission_state: Optional[Dict[str, Any]] = Field(default=None, description="Slice 7 autonomous mission execution state")
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 

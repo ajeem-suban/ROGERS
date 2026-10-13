@@ -12,7 +12,10 @@ import {
   GitCommitResponse,
   GitPushResponse,
   RemoteConfig,
-  PublishingHistoryEntry
+  PublishingHistoryEntry,
+  ExecutionPlan,
+  MissionState,
+  MissionExecutionReport
 } from '../types';
 
 const BASE_URL = '/api';
@@ -238,5 +241,51 @@ export async function pushGitCommit(
 export async function getPublishingHistory(projectId: string): Promise<PublishingHistoryEntry[]> {
   return request<PublishingHistoryEntry[]>(`/projects/${projectId}/git/publishing-history`);
 }
+
+// --- Slice 7: Autonomous Multi-Task Mission API ---
+
+/** Previews and validates the task dependency execution plan. */
+export async function getMissionPlan(projectId: string): Promise<ExecutionPlan> {
+  return request<ExecutionPlan>(`/projects/${projectId}/mission/plan`);
+}
+
+/** Fetches the live or persisted mission status and task-level progress. */
+export async function getMissionStatus(projectId: string): Promise<MissionState> {
+  return request<MissionState>(`/projects/${projectId}/mission/status`);
+}
+
+/** Starts multi-task execution for the project. */
+export async function startMission(projectId: string): Promise<MissionState> {
+  return request<MissionState>(`/projects/${projectId}/mission/start`, {
+    method: 'POST',
+  });
+}
+
+/** Safely pauses active mission execution at the task boundary. */
+export async function pauseMission(projectId: string): Promise<MissionState> {
+  return request<MissionState>(`/projects/${projectId}/mission/pause`, {
+    method: 'POST',
+  });
+}
+
+/** Resumes execution from last completed task checkpoint. */
+export async function resumeMission(projectId: string): Promise<MissionState> {
+  return request<MissionState>(`/projects/${projectId}/mission/resume`, {
+    method: 'POST',
+  });
+}
+
+/** Cancels mission execution. */
+export async function cancelMission(projectId: string): Promise<MissionState> {
+  return request<MissionState>(`/projects/${projectId}/mission/cancel`, {
+    method: 'POST',
+  });
+}
+
+/** Retrieves comprehensive final multi-task mission report. */
+export async function getMissionExecutionReport(projectId: string): Promise<MissionExecutionReport> {
+  return request<MissionExecutionReport>(`/projects/${projectId}/mission/report`);
+}
+
 
 

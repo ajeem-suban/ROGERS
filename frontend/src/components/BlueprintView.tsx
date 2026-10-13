@@ -25,6 +25,7 @@ import { StageInspector } from './StageInspector';
 import { TaskImplementationModal } from './TaskImplementationModal';
 import { DeliveryPanel } from './DeliveryPanel';
 import { GitPanel } from './GitPanel';
+import { MissionControlPanel } from './MissionControlPanel';
 
 interface BlueprintViewProps {
   project: Project;
@@ -45,7 +46,7 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
   isLoadingStage,
   onRefreshProject,
 }) => {
-  const [activeTab, setActiveTab] = useState<'blueprint' | 'scaffold' | 'stages' | 'delivery' | 'git'>('blueprint');
+  const [activeTab, setActiveTab] = useState<'blueprint' | 'mission' | 'scaffold' | 'stages' | 'delivery' | 'git'>('blueprint');
   const [selectedStageName, setSelectedStageName] = useState<string>('research');
   const [copied, setCopied] = useState(false);
   const [selectedTaskForImpl, setSelectedTaskForImpl] = useState<DevelopmentTask | null>(null);
@@ -112,6 +113,21 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
         </button>
 
         <button
+          onClick={() => setActiveTab('mission')}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all relative ${
+            activeTab === 'mission'
+              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+          }`}
+        >
+          <Shield className="w-3.5 h-3.5 text-blue-400" />
+          <span>Mission Execution</span>
+          {project.mission_state?.status === 'running' && (
+            <span className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-ping" />
+          )}
+        </button>
+
+        <button
           onClick={() => setActiveTab('scaffold')}
           className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'scaffold'
@@ -150,6 +166,18 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
           <span>GitHub & Publishing</span>
         </button>
       </div>
+
+      {/* Tab: Mission Execution */}
+      {activeTab === 'mission' && (
+        <MissionControlPanel 
+          project={project} 
+          onRefreshProject={onRefreshProject}
+          onOpenTaskImplementation={(taskId) => {
+            const t = project.blueprint?.development_tasks.find(tk => tk.id === taskId);
+            if (t) handleOpenTaskImpl(t);
+          }}
+        />
+      )}
 
       {/* Tab: GitHub & Publishing */}
       {activeTab === 'git' && (
