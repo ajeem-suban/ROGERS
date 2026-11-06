@@ -411,4 +411,95 @@ export interface ParallelMissionReport {
 }
 
 
+// --- Slice 9: Intelligent Deployment Automation Types ---
+
+export type DeploymentPlatform = 'docker' | 'render' | 'vercel' | 'netlify' | 'railway' | 'local_container';
+export type DeploymentStatus = 'pending' | 'deploying' | 'healthy' | 'failed' | 'rolled_back';
+export type HealthCheckStatus = 'pending' | 'passing' | 'failing' | 'skipped';
+export type DeploymentReadinessStatus = 'ready' | 'ready_with_warnings' | 'blocked' | 'failed';
+
+export interface ProjectStackDetection {
+  language: string;
+  framework: string;
+  package_manager: string;
+  build_command?: string | null;
+  start_command?: string | null;
+  default_port: number;
+  output_dir?: string | null;
+  detected_configs: string[];
+  required_env_vars: string[];
+}
+
+export interface ReadinessCheckItem {
+  id: string;
+  title: string;
+  status: 'pass' | 'warning' | 'blocked';
+  severity: 'info' | 'warning' | 'critical';
+  details: string;
+  recommendation?: string | null;
+}
+
+export interface DeploymentReadinessReport {
+  overall_status: DeploymentReadinessStatus;
+  can_deploy: boolean;
+  score: number;
+  checks: ReadinessCheckItem[];
+  blockers: string[];
+  warnings: string[];
+  recommendations: string[];
+  checked_at: string;
+}
+
+export interface GeneratedConfigFile {
+  filename: string;
+  path: string;
+  content: string;
+  file_type: string;
+}
+
+export interface DeploymentPlan {
+  plan_id: string;
+  project_id: string;
+  platform: DeploymentPlatform;
+  environment: string;
+  build_command?: string | null;
+  start_command?: string | null;
+  target_port: number;
+  health_check_path: string;
+  env_vars: Record<string, string>;
+  generated_configs: GeneratedConfigFile[];
+  steps: string[];
+  risks: string[];
+  is_approved: boolean;
+  approved_by?: string | null;
+  approved_at?: string | null;
+  created_at: string;
+}
+
+export interface DeploymentRecord {
+  deployment_id: string;
+  project_id: string;
+  platform: DeploymentPlatform;
+  environment: string;
+  status: DeploymentStatus;
+  deployment_url?: string | null;
+  health_status: HealthCheckStatus;
+  health_status_code?: number | null;
+  health_message?: string | null;
+  logs: string[];
+  snapshot_id?: string | null;
+  duration_seconds: number;
+  error_message?: string | null;
+  created_at: string;
+  completed_at?: string | null;
+}
+
+export interface DeploymentState {
+  project_id: string;
+  active_deployment?: DeploymentRecord | null;
+  current_plan?: DeploymentPlan | null;
+  readiness?: DeploymentReadinessReport | null;
+  stack?: ProjectStackDetection | null;
+  history: DeploymentRecord[];
+}
 

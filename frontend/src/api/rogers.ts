@@ -18,7 +18,13 @@ import {
   MissionExecutionReport,
   ParallelExecutionPlan,
   ParallelMissionState,
-  ParallelMissionReport
+  ParallelMissionReport,
+  ProjectStackDetection,
+  DeploymentReadinessReport,
+  DeploymentPlan,
+  DeploymentRecord,
+  DeploymentState,
+  DeploymentPlatform
 } from '../types';
 
 const BASE_URL = '/api';
@@ -337,5 +343,79 @@ export async function getParallelReport(projectId: string): Promise<ParallelMiss
 }
 
 
+// ============================================================
+// SLICE 9: INTELLIGENT DEPLOYMENT AUTOMATION API
+// ============================================================
 
+/** Detects the technology stack of a project's generated workspace. */
+export async function detectDeploymentStack(projectId: string): Promise<ProjectStackDetection> {
+  return request<ProjectStackDetection>(`/projects/${projectId}/deployment/detect`);
+}
 
+/** Evaluates deployment readiness: secrets, structure, testing, and git status. */
+export async function assessDeploymentReadiness(projectId: string): Promise<DeploymentReadinessReport> {
+  return request<DeploymentReadinessReport>(`/projects/${projectId}/deployment/readiness`);
+}
+
+/** Generates a deployment plan for the specified platform. */
+export async function generateDeploymentPlan(
+  projectId: string,
+  platform: DeploymentPlatform = 'docker',
+  targetPort?: number,
+  healthCheckPath?: string,
+  envVars?: Record<string, string>
+): Promise<DeploymentPlan> {
+  return request<DeploymentPlan>(`/projects/${projectId}/deployment/plan`, {
+    method: 'POST',
+    body: JSON.stringify({
+      platform,
+      target_port: targetPort,
+      health_check_path: healthCheckPath,
+      env_vars: envVars
+    })
+  });
+}
+
+/** Mandatory human approval gate: approves a generated deployment plan. */
+export async function approveDeploymentPlan(
+  projectId: string,
+  approvedBy: string = 'Commander',
+  notes?: string
+): Promise<DeploymentPlan> {
+  return request<DeploymentPlan>(`/projects/${projectId}/deployment/plan/approve`, {
+    method: 'POST',
+    body: JSON.stringify({ approved_by: approvedBy, notes })
+  });
+}
+
+/** Executes a deployment after plan approval. */
+export async function executeDeployment(
+  projectId: string,
+  simulateOnly: boolean = false
+): Promise<DeploymentRecord> {
+  return request<DeploymentRecord>(`/projects/${projectId}/deployment/deploy`, {
+    method: 'POST',
+    body: JSON.stringify({ simulate_only: simulateOnly })
+  });
+}
+
+/** Retrieves current deployment status, plan, and readiness state. */
+export async function getDeploymentStatus(projectId: string): Promise<DeploymentState> {
+  return request<DeploymentState>(`/projects/${projectId}/deployment/status`);
+}
+
+/** Triggers a rollback to a previous deployment snapshot. */
+export async function rollbackDeployment(
+  projectId: string,
+  targetDeploymentId?: string
+): Promise<DeploymentRecord> {
+  return request<DeploymentRecord>(`/projects/${projectId}/deployment/rollback`, {
+    method: 'POST',
+    body: JSON.stringify({ target_deployment_id: targetDeploymentId })
+  });
+}
+
+/** Returns the full chronological deployment audit history. */
+export async function getDeploymentHistory(projectId: string): Promise<DeploymentRecord[]> {
+  return request<DeploymentRecord[]>(`/projects/${projectId}/deployment/history`);
+}

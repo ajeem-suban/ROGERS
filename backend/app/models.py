@@ -88,6 +88,7 @@ class Project(BaseModel):
     package_metadata: Optional[DeliveryPackageMetadata] = Field(default=None, description="Latest delivery package metadata")
     publishing_history: List[PublishingHistoryEntry] = Field(default_factory=list, description="Audit log of Git publishing operations")
     mission_state: Optional[Dict[str, Any]] = Field(default=None, description="Slice 7 autonomous mission execution state")
+    deployment_state: Optional[Dict[str, Any]] = Field(default=None, description="Slice 9 deployment state and history")
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 

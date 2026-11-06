@@ -52,6 +52,18 @@ from ..agents.models import (
     ParallelMissionActionRequest
 )
 from ..agents.orchestrator import MultiAgentOrchestrator, MultiAgentOrchestratorError
+from ..deployment.models import (
+    ProjectStackDetection,
+    DeploymentReadinessReport,
+    DeploymentPlan,
+    DeploymentRecord,
+    DeploymentState,
+    DeploymentPlanRequest,
+    ApprovePlanRequest,
+    DeployActionRequest,
+    RollbackRequest
+)
+from ..deployment.service import DeploymentService, DeploymentExecutionError
 from ..storage import ProjectStorage
 from ..orchestrator import BlueprintOrchestrator, OrchestratorError
 from ..scaffolder import ProjectScaffolder, GENERATED_BASE_DIR, slugify
@@ -520,6 +532,110 @@ async def get_parallel_report(project_id: str):
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
     return MultiAgentOrchestrator.get_report(project)
+
+
+# ==============================================================================
+# SLICE 9: INTELLIGENT DEPLOYMENT AUTOMATION ENDPOINTS
+# ==============================================================================
+
+@router.get("/{project_id}/deployment/detect", response_model=ProjectStackDetection)
+async def detect_deployment_stack(project_id: str):
+    """Inspects project structure and returns detected stack and entrypoints."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    return DeploymentService.detect_stack(project)
+
+
+@router.get("/{project_id}/deployment/readiness", response_model=DeploymentReadinessReport)
+async def assess_deployment_readiness(project_id: str):
+    """Evaluates security secrets, directory integrity, tests, and configuration readiness."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    return DeploymentService.assess_readiness(project)
+
+
+@router.post("/{project_id}/deployment/plan", response_model=DeploymentPlan)
+async def generate_deployment_plan(project_id: str, payload: Optional[DeploymentPlanRequest] = None):
+    """Generates a complete deployment plan with platform configurations."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    platform = payload.platform if payload and payload.platform else "docker"
+    port = payload.target_port if payload else None
+    health_path = payload.health_check_path if payload else None
+    env_vars = payload.env_vars if payload else None
+    try:
+        return DeploymentService.generate_plan(
+            project=project,
+            platform=platform,
+            target_port=port,
+            health_check_path=health_path,
+            env_vars=env_vars
+        )
+    except DeploymentExecutionError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{project_id}/deployment/plan/approve", response_model=DeploymentPlan)
+async def approve_deployment_plan(project_id: str, payload: Optional[ApprovePlanRequest] = None):
+    """Mandatory human approval gate for deployment plan."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    approved_by = payload.approved_by if payload and payload.approved_by else "Commander"
+    notes = payload.notes if payload else None
+    try:
+        return DeploymentService.approve_plan(project, approved_by=approved_by, notes=notes)
+    except DeploymentExecutionError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{project_id}/deployment/deploy", response_model=DeploymentRecord)
+async def execute_deployment(project_id: str, payload: Optional[DeployActionRequest] = None):
+    """Executes verified deployment with health checks, logging, and snapshot protection."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    simulate = payload.simulate_only if payload else False
+    try:
+        return DeploymentService.execute_deployment(project, simulate_only=simulate)
+    except DeploymentExecutionError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get("/{project_id}/deployment/status", response_model=DeploymentState)
+async def get_deployment_status(project_id: str):
+    """Retrieves full deployment state including active deployment, current plan, and readiness."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    return DeploymentService.get_state(project)
+
+
+@router.post("/{project_id}/deployment/rollback", response_model=DeploymentRecord)
+async def rollback_deployment(project_id: str, payload: Optional[RollbackRequest] = None):
+    """Rolls back project files and configuration to prior deployment snapshot."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    target_id = payload.target_deployment_id if payload else None
+    try:
+        return DeploymentService.rollback(project, target_deployment_id=target_id)
+    except DeploymentExecutionError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get("/{project_id}/deployment/history", response_model=List[DeploymentRecord])
+async def get_deployment_history(project_id: str):
+    """Returns chronological audit trail of all deployments for this project."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    state = DeploymentService.get_state(project)
+    return state.history
+
 
 
 

@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from .routes.documents import router as documents_router
 from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
@@ -25,3 +26,7 @@ async def info():
         "name": "Tamil AI Document Intelligence",
         "architecture": "The system follows a decoupled, event-driven architecture. The React single-page frontend communicates with the FastAPI gateway via REST and Server-Sent Events. Ingested documents are stored in object storage, while an asynchronous OCR worker pool extracts text and coordinates. Extracted text chunks are vectorized and indexed in SQLite vector extension. When a query is submitted, the RAG engine performs hybrid dense-sparse semantic retrieval and streams context-grounded responses back to the user."
     }
+
+
+# Mount Documents Ingestion Route
+app.include_router(documents_router)
