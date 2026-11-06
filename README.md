@@ -539,6 +539,22 @@ ROGERS features an autonomous, multi-task mission execution engine:
 
 ---
 
+## 🛡️ Slice 8: Multi-Agent Parallel Execution
+
+ROGERS features an autonomous multi-agent parallel execution engine:
+- **Specialized Agent Roster**: Dedicated agents for distinct software engineering roles:
+  - *Falcon Recon (Researcher)*: Gathers project context, file layout, and domain parameters.
+  - *Vision Architect (Architect)*: Analyzes component boundaries and predicts file write paths.
+  - *War Machine / Iron Patriot / Hulkbuster (Developers)*: Implements code changes in parallel worker streams.
+  - *Hawkeye QA (Tester)*: Executes automated validation, test discovery, and diagnostic checks.
+  - *Captain America Security Shield (Reviewer)*: Audits file diffs, detects secrets, and enforces verification gates.
+- **Dependency-Aware Parallel Batches**: Structures independent roadmap tasks into concurrent execution layers (DAG stages).
+- **Active File-Conflict Guard**: Dynamic file lock table prevents concurrent agents from mutating identical target files simultaneously.
+- **Configurable Concurrency Caps**: Concurrency limit (`max_concurrent_agents`) defaults to 3 and is configurable from 1 to 5 agents.
+- **Mission Control Squadron Dashboard**: Real-time multi-agent roster status, live active file locks, DAG stage visualization, and debriefing reports.
+
+---
+
 # 📜 License
 
 ROGERS is open source software released under the **MIT License**.

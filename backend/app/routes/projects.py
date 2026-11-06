@@ -45,6 +45,13 @@ from ..mission.models import (
     MissionActionRequest
 )
 from ..mission.service import MissionOrchestrator, MissionOrchestratorError
+from ..agents.models import (
+    ParallelExecutionPlan,
+    ParallelMissionState,
+    ParallelMissionReport,
+    ParallelMissionActionRequest
+)
+from ..agents.orchestrator import MultiAgentOrchestrator, MultiAgentOrchestratorError
 from ..storage import ProjectStorage
 from ..orchestrator import BlueprintOrchestrator, OrchestratorError
 from ..scaffolder import ProjectScaffolder, GENERATED_BASE_DIR, slugify
@@ -447,6 +454,73 @@ async def get_mission_report(project_id: str):
     if not project:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
     return MissionOrchestrator.get_mission_report(project)
+
+
+# --- Slice 8: Multi-Agent Parallel Execution Endpoints ---
+
+@router.get("/{project_id}/parallel/plan", response_model=ParallelExecutionPlan)
+async def get_parallel_plan(project_id: str):
+    """Previews DAG parallel batches and agent task distribution."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    return MultiAgentOrchestrator.get_parallel_plan(project)
+
+
+@router.get("/{project_id}/parallel/status", response_model=ParallelMissionState)
+async def get_parallel_status(project_id: str):
+    """Retrieves live parallel execution state, active agents, and locked files."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    return MultiAgentOrchestrator.get_state(project)
+
+
+@router.post("/{project_id}/parallel/start", response_model=ParallelMissionState)
+async def start_parallel_mission(project_id: str, payload: Optional[ParallelMissionActionRequest] = None):
+    """Starts multi-agent parallel mission execution with configurable concurrency."""
+    max_agents = payload.max_concurrent_agents if payload and payload.max_concurrent_agents else 3
+    try:
+        return await MultiAgentOrchestrator.start_parallel_mission(project_id, max_concurrent_agents=max_agents)
+    except MultiAgentOrchestratorError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{project_id}/parallel/pause", response_model=ParallelMissionState)
+async def pause_parallel_mission(project_id: str):
+    """Safely pauses parallel agents at task boundaries."""
+    try:
+        return await MultiAgentOrchestrator.pause_parallel_mission(project_id)
+    except MultiAgentOrchestratorError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{project_id}/parallel/resume", response_model=ParallelMissionState)
+async def resume_parallel_mission(project_id: str):
+    """Resumes paused parallel multi-agent mission."""
+    try:
+        return await MultiAgentOrchestrator.resume_parallel_mission(project_id)
+    except MultiAgentOrchestratorError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/{project_id}/parallel/cancel", response_model=ParallelMissionState)
+async def cancel_parallel_mission(project_id: str):
+    """Cancels active parallel mission."""
+    try:
+        return await MultiAgentOrchestrator.cancel_parallel_mission(project_id)
+    except MultiAgentOrchestratorError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get("/{project_id}/parallel/report", response_model=ParallelMissionReport)
+async def get_parallel_report(project_id: str):
+    """Generates comprehensive multi-agent parallel mission execution report."""
+    project = ProjectStorage.get_by_id(project_id)
+    if not project:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Project '{project_id}' not found.")
+    return MultiAgentOrchestrator.get_report(project)
+
 
 
 

@@ -15,7 +15,10 @@ import {
   PublishingHistoryEntry,
   ExecutionPlan,
   MissionState,
-  MissionExecutionReport
+  MissionExecutionReport,
+  ParallelExecutionPlan,
+  ParallelMissionState,
+  ParallelMissionReport
 } from '../types';
 
 const BASE_URL = '/api';
@@ -286,6 +289,53 @@ export async function cancelMission(projectId: string): Promise<MissionState> {
 export async function getMissionExecutionReport(projectId: string): Promise<MissionExecutionReport> {
   return request<MissionExecutionReport>(`/projects/${projectId}/mission/report`);
 }
+
+// --- Slice 8: Multi-Agent Parallel Execution API ---
+
+/** Previews parallel execution batches and task distribution. */
+export async function getParallelPlan(projectId: string): Promise<ParallelExecutionPlan> {
+  return request<ParallelExecutionPlan>(`/projects/${projectId}/parallel/plan`);
+}
+
+/** Fetches live parallel multi-agent state, active agents, and locked files. */
+export async function getParallelStatus(projectId: string): Promise<ParallelMissionState> {
+  return request<ParallelMissionState>(`/projects/${projectId}/parallel/status`);
+}
+
+/** Starts parallel multi-agent mission with configurable concurrency. */
+export async function startParallelMission(projectId: string, maxConcurrentAgents: number = 3): Promise<ParallelMissionState> {
+  return request<ParallelMissionState>(`/projects/${projectId}/parallel/start`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'start', max_concurrent_agents: maxConcurrentAgents }),
+  });
+}
+
+/** Safely pauses parallel mission agents. */
+export async function pauseParallelMission(projectId: string): Promise<ParallelMissionState> {
+  return request<ParallelMissionState>(`/projects/${projectId}/parallel/pause`, {
+    method: 'POST',
+  });
+}
+
+/** Resumes paused parallel multi-agent mission. */
+export async function resumeParallelMission(projectId: string): Promise<ParallelMissionState> {
+  return request<ParallelMissionState>(`/projects/${projectId}/parallel/resume`, {
+    method: 'POST',
+  });
+}
+
+/** Cancels active parallel multi-agent mission. */
+export async function cancelParallelMission(projectId: string): Promise<ParallelMissionState> {
+  return request<ParallelMissionState>(`/projects/${projectId}/parallel/cancel`, {
+    method: 'POST',
+  });
+}
+
+/** Fetches comprehensive final parallel mission report. */
+export async function getParallelReport(projectId: string): Promise<ParallelMissionReport> {
+  return request<ParallelMissionReport>(`/projects/${projectId}/parallel/report`);
+}
+
 
 
 

@@ -17,7 +17,8 @@ import {
   Code2,
   Shield,
   ShieldCheck,
-  FolderGit2
+  FolderGit2,
+  Users
 } from 'lucide-react';
 import { Project, Blueprint, DevelopmentTask } from '../types';
 import { ScaffoldPanel } from './ScaffoldPanel';
@@ -26,6 +27,7 @@ import { TaskImplementationModal } from './TaskImplementationModal';
 import { DeliveryPanel } from './DeliveryPanel';
 import { GitPanel } from './GitPanel';
 import { MissionControlPanel } from './MissionControlPanel';
+import { ParallelAgentPanel } from './ParallelAgentPanel';
 
 interface BlueprintViewProps {
   project: Project;
@@ -46,7 +48,7 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
   isLoadingStage,
   onRefreshProject,
 }) => {
-  const [activeTab, setActiveTab] = useState<'blueprint' | 'mission' | 'scaffold' | 'stages' | 'delivery' | 'git'>('blueprint');
+  const [activeTab, setActiveTab] = useState<'blueprint' | 'mission' | 'parallel' | 'scaffold' | 'stages' | 'delivery' | 'git'>('blueprint');
   const [selectedStageName, setSelectedStageName] = useState<string>('research');
   const [copied, setCopied] = useState(false);
   const [selectedTaskForImpl, setSelectedTaskForImpl] = useState<DevelopmentTask | null>(null);
@@ -128,6 +130,18 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
         </button>
 
         <button
+          onClick={() => setActiveTab('parallel')}
+          className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all relative ${
+            activeTab === 'parallel'
+              ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-md'
+              : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+          }`}
+        >
+          <Users className="w-3.5 h-3.5 text-purple-400" />
+          <span>Multi-Agent Squadron</span>
+        </button>
+
+        <button
           onClick={() => setActiveTab('scaffold')}
           className={`flex items-center space-x-2 px-4 py-2 rounded-xl text-xs font-semibold transition-all ${
             activeTab === 'scaffold'
@@ -170,6 +184,18 @@ export const BlueprintView: React.FC<BlueprintViewProps> = ({
       {/* Tab: Mission Execution */}
       {activeTab === 'mission' && (
         <MissionControlPanel 
+          project={project} 
+          onRefreshProject={onRefreshProject}
+          onOpenTaskImplementation={(taskId) => {
+            const t = project.blueprint?.development_tasks.find(tk => tk.id === taskId);
+            if (t) handleOpenTaskImpl(t);
+          }}
+        />
+      )}
+
+      {/* Tab: Multi-Agent Squadron */}
+      {activeTab === 'parallel' && (
+        <ParallelAgentPanel 
           project={project} 
           onRefreshProject={onRefreshProject}
           onOpenTaskImplementation={(taskId) => {

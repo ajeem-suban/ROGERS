@@ -327,4 +327,88 @@ export interface MissionExecutionReport {
   summary: string;
 }
 
+// --- Slice 8: Multi-Agent Parallel Execution Types ---
+
+export type AgentRole = 'researcher' | 'architect' | 'developer' | 'tester' | 'reviewer';
+export type AgentStatus = 'idle' | 'busy' | 'completed' | 'failed';
+export type ParallelMissionStatus = 'ready' | 'running' | 'paused' | 'blocked' | 'failed' | 'cancelled' | 'completed';
+
+export interface AgentInfo {
+  agent_id: string;
+  role: AgentRole;
+  name: string;
+  specialization: string;
+  status: AgentStatus;
+  current_task_id?: string | null;
+  current_task_title?: string | null;
+  tasks_completed: number;
+  recent_logs: string[];
+}
+
+export interface AgentLogEntry {
+  timestamp: string;
+  agent_id: string;
+  role: AgentRole;
+  task_id?: string | null;
+  message: string;
+  level: 'info' | 'success' | 'warning' | 'error';
+}
+
+export interface ParallelPlanItem {
+  task_id: string;
+  title: string;
+  priority: string;
+  depends_on: string[];
+  stage_index: number;
+  assigned_role: AgentRole;
+  estimated_files: string[];
+}
+
+export interface ParallelExecutionPlan {
+  project_id: string;
+  project_name: string;
+  is_valid: boolean;
+  total_tasks: number;
+  parallel_batches: string[][];
+  tasks: ParallelPlanItem[];
+  validation_errors: string[];
+}
+
+export interface ParallelMissionState {
+  project_id: string;
+  status: ParallelMissionStatus;
+  config: {
+    max_concurrent_agents: number;
+  };
+  agents: AgentInfo[];
+  file_locks: Record<string, string>;
+  running_task_ids: string[];
+  completed_task_ids: string[];
+  failed_task_ids: string[];
+  blocked_task_ids: string[];
+  parallel_batches: string[][];
+  logs: AgentLogEntry[];
+  error_message?: string | null;
+  started_at?: string | null;
+  updated_at?: string | null;
+  completed_at?: string | null;
+}
+
+export interface ParallelMissionReport {
+  project_id: string;
+  project_name: string;
+  status: ParallelMissionStatus;
+  total_tasks: number;
+  completed_count: number;
+  failed_count: number;
+  blocked_count: number;
+  concurrent_limit: number;
+  duration_seconds: number;
+  agents_summary: AgentInfo[];
+  summary: string;
+  started_at?: string | null;
+  completed_at?: string | null;
+}
+
+
 
