@@ -528,6 +528,17 @@ ROGERS includes a built-in Version Control & Autonomous Publishing suite:
 
 ---
 
+## 🛡️ Slice 7: Autonomous Multi-Task Mission Execution
+
+ROGERS features an autonomous, multi-task mission execution engine:
+- **Dependency Graph Engine (DAG)**: Validates task prerequisite relations, prevents self-dependencies, detects cycles via Kahn's algorithm, and generates a deterministic topological execution sequence.
+- **Sequential Multi-Task Execution**: Executes tasks sequentially in strict dependency order. Dependent tasks remain blocked until all prerequisites pass verification.
+- **Bounded Automated Repair**: Reuses the Slice 4 testing and repair loop with a maximum of 3 repair attempts per task, halting safely if repairs are exhausted.
+- **Controlled Lifecycle & Recovery**: Full state machine (`ready`, `running`, `paused`, `blocked`, `failed`, `cancelled`, `completed`) with concurrency locking, safe pause boundaries, checkpoint reconciliation upon restart, and abort capabilities.
+- **Captain America Mission Control UI**: Interactive Mission Execution dashboard featuring real-time task progress, prerequisite chips, verification badges, animated shield telemetry, and exportable Mission Reports.
+
+---
+
 # 📜 License
 
 ROGERS is open source software released under the **MIT License**.
